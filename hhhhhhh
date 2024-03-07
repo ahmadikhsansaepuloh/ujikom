@@ -1,0 +1,83 @@
+<?php
+include 'koneksi.php';
+include 'boots.php';
+
+$searchTerm = isset($_GET['q']) ? $_GET['q'] : '';
+$startDate = isset($_GET['start_date']) ? $_GET['start_date'] : '';
+$endDate = isset($_GET['end_date']) ? $_GET['end_date'] : '';
+
+// Memeriksa apakah rentang tanggal telah dipilih
+if (!empty($startDate) && !empty($endDate)) {
+    // Menghindari serangan SQL Injection menggunakan parameterized query
+    $stmt = $koneksi->prepare("SELECT * FROM listtamu WHERE waktu BETWEEN ? AND ?");
+    $stmt->bind_param("ss", $startDate, $endDate);
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    // Jika rentang tanggal tidak dipilih, tampilkan semua data
+    $result = $koneksi->query("SELECT * FROM listtamu");
+}
+?>
+
+<div class="container mt-1">
+    <form class="d-flex form mb-3" method="GET" action="">
+        <div class="me-2">
+            <input type="date" class="form-control rounded-0" name="start_date">
+        </div>
+        <div class="ms-2">
+            <input type="date" class="form-control rounded-0" name="end_date">
+        </div>
+        <div class="ms-3">
+            <button type="submit" class="btn btn-primary rounded-0" name="q">Search</button>
+        </div>
+        <div class="ms-auto">
+            <button class="btn fs-1" onclick="printDiv('div1')"><i class="bi bi-printer"></i></button>
+        </div>
+    </form>
+</div>
+
+<div id="div1">
+    <main class="container">
+        <table class="table table-bordered table-secondary table-hover">
+            <thead class="thead-dark text-center">
+                <tr>
+                    <th>No</th>
+                    <th>Nama</th>
+                    <th>Sakit</th>
+                    <th>Kelas</th>
+                    <th>Jurusan</th>
+                    <th>Jenis Kelamin</th>
+                    <th>Waktu</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                $i = 1;
+                while ($s = $result->fetch_array()) {
+                ?>
+                    <tr>
+                        <th scope="row" class="text-center"><?= $i++; ?></th>
+                        <td class="text-center"><?= $s['nama']; ?></td>
+                        <td class="text-center"><?= $s['sakit']; ?></td>
+                        <td class="text-center"><?= $s['kelas']; ?></td>
+                        <td class="text-center"><?= $s['jurusan']; ?></td>
+                        <td class="text-center"><?= $s['jk']; ?></td>
+                        <td class="text-center"><?= $s['waktu']; ?></td>
+                    </tr>
+                <?php
+                }
+                ?>
+            </tbody>
+        </table>
+    </main>
+</div>
+
+<script>
+    function printDiv(el) {
+        var a = document.body.innerHTML;
+        var b = document.getElementById(el).innerHTML;
+        document.body.innerHTML = b;
+        window.print();
+        document.body.innerHTML = a;
+    }
+</script>
